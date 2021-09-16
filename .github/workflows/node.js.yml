@@ -33,5 +33,5 @@ jobs:
       with:
           source_dir: dist
           container_name: $web
-          connection_string: 'DefaultEndpointsProtocol=https;AccountName=shackletonmedia;AccountKey=svwO7YhkbDCq7WYbFiy6qJqrfhREnUY/tjAyjgItfFdfDVzCmtvAsl6Ov8li6LQGl2DAg/XEZgTOiWgdvtGGQg==;BlobEndpoint=https://shackletonmedia.blob.core.windows.net/;'
+          connection_string: ${{ secrets.shackletonmedia }}
           sync: true
