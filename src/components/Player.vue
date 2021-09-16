@@ -1,102 +1,112 @@
-<template lang="pug">
-.player(:id="id")
+<template>
+<div :id="id" class="player">
+<p class="message"></p>
+<div class="control">
+<a class="button">
+<i class="material-icons" @click="playing = !playing" v-if="!playing">play_arrow</i>
+<i class="material-icons" @click="playing = !playing" v-if="playing">pause</i>
+</a>
+<div class="track"><div class="progress"></div><div class="scrubber"></div></div>
+</div>
+</div>
+<!-- .player(:id="id")
   p.message
   .control
     a.button
-      i.material-icons(@click="playing = !playing" v-if="!playing") play_arrow
-      i.material-icons(@click="playing = !playing" v-if="playing") pause
+      i.material-icons(@click="playing = !playing", v-if="!playing") play_arrow
+      i.material-icons(@click="playing = !playing", v-if="playing") pause
     .track
       .progress
-      .scrubber
+      .scrubber -->
 </template>
 
 <script>
-import Vue from 'vue'
+import Vue from "vue";
 
 export default {
-  props: ['url', 'audiocontext'],
-  data () {
+  props: ["url", "audiocontext"],
+  data() {
     return {
       player: {},
       playing: false,
-      id: null
-    }
+      id: null,
+    };
   },
-  mounted () {
+  mounted() {
     // Generate unique ID from url
-    this.id = this.url.split('/')[5].split('-').join('').toLowerCase()
+    this.id = this.url.split("/")[5].split("-").join("").toLowerCase();
     Vue.nextTick(() => {
-      let playerElement = document.querySelector(`[id='${this.id}']`)
-      this.player = new Player(this.url, playerElement, this.audiocontext)
-    })
-  }
-}
+      let playerElement = document.querySelector(`[id='${this.id}']`);
+      this.player = new Player(this.url, playerElement, this.audiocontext);
+    });
+  },
+};
 
-function Player (url, el, audiocontext) {
-  this.ac = audiocontext
-  this.url = url
-  this.el = el
-  this.button = el.querySelector('.button')
-  this.track = el.querySelector('.track')
-  this.progress = el.querySelector('.progress')
-  this.scrubber = el.querySelector('.scrubber')
-  this.message = el.querySelector('.message')
-  this.message.innerHTML = 'Loading'
-  this.bindEvents()
-  this.fetch()
+function Player(url, el, audiocontext) {
+  this.ac = audiocontext;
+  this.url = url;
+  this.el = el;
+  this.button = el.querySelector(".button");
+  this.track = el.querySelector(".track");
+  this.progress = el.querySelector(".progress");
+  this.scrubber = el.querySelector(".scrubber");
+  this.message = el.querySelector(".message");
+  this.message.innerHTML = "Loading";
+  this.bindEvents();
+  this.fetch();
 }
 
 Player.prototype.bindEvents = function () {
-  this.button.addEventListener('click', this.toggle.bind(this))
-  this.scrubber.addEventListener('mousedown', this.onMouseDown.bind(this))
-  window.addEventListener('mousemove', this.onDrag.bind(this))
-  window.addEventListener('mouseup', this.onMouseUp.bind(this))
-}
+  this.button.addEventListener("click", this.toggle.bind(this));
+  this.scrubber.addEventListener("mousedown", this.onMouseDown.bind(this));
+  window.addEventListener("mousemove", this.onDrag.bind(this));
+  window.addEventListener("mouseup", this.onMouseUp.bind(this));
+};
 
 Player.prototype.fetch = function () {
-  var xhr = new XMLHttpRequest()
-  xhr.open('GET', this.url, true)
-  xhr.responseType = 'blob'
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", this.url, true);
+  xhr.responseType = "blob";
   xhr.onload = function () {
-    this.decode(xhr.response)
-  }.bind(this)
-  xhr.send()
-}
+    this.decode(xhr.response);
+  }.bind(this);
+  xhr.send();
+};
 
 Player.prototype.decode = function (blob) {
   const getArray = (blob, fn) => {
-    const reader = new FileReader()
-    reader.onload = e => {
-      const data = new Uint8Array(e.target.result)
-      fn(data)
-    }
-    reader.readAsArrayBuffer(blob)
-  }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = new Uint8Array(e.target.result);
+      fn(data);
+    };
+    reader.readAsArrayBuffer(blob);
+  };
 
   const getSamples = (array) => {
-    let samples = AMR.decode(array)
-    playSamples(samples)
-  }
+    let samples = AMR.decode(array);
+    playSamples(samples);
+  };
 
   const playSamples = (samples) => {
-    init(samples)
-  }
+    init(samples);
+  };
 
-  let that = this
+  let that = this;
   const init = (samples) => {
-    that.buffer = that.ac.createBuffer(1, samples.length, 8000)
+    that.buffer = that.ac.createBuffer(1, samples.length, 8000);
     if (that.buffer.copyToChannel) {
-      that.buffer.copyToChannel(samples, 0, 0)
+      that.buffer.copyToChannel(samples, 0, 0);
     } else {
-      const channelBuffer = that.buffer.getChannelData(0)
-      channelBuffer.set(samples)
+      const channelBuffer = that.buffer.getChannelData(0);
+      channelBuffer.set(samples);
     }
-    that.message.innerHTML = ''
-    that.draw()
+    that.message.innerHTML = "";
+    that.draw();
     // that.play()
-  }
+  };
 
-  getArray(blob, getSamples)
+  getArray(blob, getSamples);
 
   // this.ac.decodeAudioData(arrayBuffer, function (audioBuffer) {
   //   this.message.innerHTML = ''
@@ -104,112 +114,112 @@ Player.prototype.decode = function (blob) {
   //   this.draw()
   //   this.play()
   // }.bind(this))
-}
+};
 
 Player.prototype.connect = function () {
   if (this.playing) {
-    this.pause()
+    this.pause();
   }
-  this.source = this.ac.createBufferSource()
-  this.source.buffer = this.buffer
-  this.source.connect(this.ac.destination)
-}
+  this.source = this.ac.createBufferSource();
+  this.source.buffer = this.buffer;
+  this.source.connect(this.ac.destination);
+};
 
 Player.prototype.play = function (position) {
-  this.connect()
+  this.connect();
   if (this.position >= this.buffer.duration) {
-    this.position = 0
+    this.position = 0;
   }
-  this.position = typeof position === 'number' ? position : this.position || 0
-  this.startTime = this.ac.currentTime - (this.position || 0)
-  this.source.start(this.ac.currentTime, this.position)
-  this.playing = true
-}
+  this.position = typeof position === "number" ? position : this.position || 0;
+  this.startTime = this.ac.currentTime - (this.position || 0);
+  this.source.start(this.ac.currentTime, this.position);
+  this.playing = true;
+};
 
 Player.prototype.pause = function () {
   if (this.source) {
-    this.source.stop(0)
-    this.source = null
-    this.position = this.ac.currentTime - this.startTime
-    this.playing = false
+    this.source.stop(0);
+    this.source = null;
+    this.position = this.ac.currentTime - this.startTime;
+    this.playing = false;
   }
-}
+};
 
 Player.prototype.seek = function (time) {
   if (this.playing) {
-    this.play(time)
+    this.play(time);
   } else {
-    this.position = time
+    this.position = time;
   }
-}
+};
 
 Player.prototype.updatePosition = function () {
   this.position = this.playing
-    ? this.ac.currentTime - this.startTime : this.position
+    ? this.ac.currentTime - this.startTime
+    : this.position;
   if (this.position >= this.buffer.duration) {
-    this.position = this.buffer.duration
-    this.pause()
+    this.position = this.buffer.duration;
+    this.pause();
   }
-  return this.position
-}
+  return this.position;
+};
 
 Player.prototype.toggle = function () {
   if (!this.playing) {
-    this.play()
+    this.play();
   } else {
-    this.pause()
+    this.pause();
   }
-}
+};
 
 Player.prototype.onMouseDown = function (e) {
-  this.dragging = true
-  this.startX = e.pageX
-  this.startLeft = parseInt(this.scrubber.style.left || 0, 10)
-}
+  this.dragging = true;
+  this.startX = e.pageX;
+  this.startLeft = parseInt(this.scrubber.style.left || 0, 10);
+};
 
 Player.prototype.onDrag = function (e) {
-  var width, position
+  var width, position;
   if (!this.dragging) {
-    return
+    return;
   }
-  width = this.track.offsetWidth
-  position = this.startLeft + (e.pageX - this.startX)
-  position = Math.max(Math.min(width, position), 0)
-  this.scrubber.style.left = position + 'px'
-}
+  width = this.track.offsetWidth;
+  position = this.startLeft + (e.pageX - this.startX);
+  position = Math.max(Math.min(width, position), 0);
+  this.scrubber.style.left = position + "px";
+};
 
 Player.prototype.onMouseUp = function () {
-  var width, left, time
+  var width, left, time;
   if (this.dragging) {
-    width = this.track.offsetWidth
-    left = parseInt(this.scrubber.style.left || 0, 10)
-    time = left / width * this.buffer.duration
-    this.seek(time)
-    this.dragging = false
+    width = this.track.offsetWidth;
+    left = parseInt(this.scrubber.style.left || 0, 10);
+    time = (left / width) * this.buffer.duration;
+    this.seek(time);
+    this.dragging = false;
   }
-}
+};
 
 Player.prototype.draw = function () {
-  let progress = (this.updatePosition() / this.buffer.duration)
-  let width = this.track.offsetWidth
+  let progress = this.updatePosition() / this.buffer.duration;
+  let width = this.track.offsetWidth;
   if (this.playing) {
-    this.button.classList.add('pause')
-    this.button.classList.remove('play')
+    this.button.classList.add("pause");
+    this.button.classList.remove("play");
   } else {
-    this.button.classList.add('play')
-    this.button.classList.remove('pause')
+    this.button.classList.add("play");
+    this.button.classList.remove("pause");
   }
-  this.progress.style.width = (progress * width) + 'px'
+  this.progress.style.width = progress * width + "px";
   if (!this.dragging) {
-    this.scrubber.style.left = (progress * width) + 'px'
+    this.scrubber.style.left = progress * width + "px";
   }
-  requestAnimationFrame(this.draw.bind(this))
-}
-
+  requestAnimationFrame(this.draw.bind(this));
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style lang="stylus" scoped>
+<style lang="scss" scoped>
 * {
   box-sizing: border-box;
 }
@@ -220,7 +230,7 @@ Player.prototype.draw = function () {
 }
 
 .message {
-  margin 0
+  margin: 0;
 }
 
 .controls {

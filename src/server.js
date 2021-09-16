@@ -1,10 +1,11 @@
+/* eslint-disable */
 export default class Server {
-  constructor (address, Vue, port = '44055', endpoint = 'api') {
+  constructor(address, Vue, port = '44055', endpoint = 'api') {
     this.url = `${address}:${port}/${endpoint}`
     this.http = Vue.$http
   }
 
-  GET (endpoint) {
+  GET(endpoint) {
     return this.http.get(this.url + `${endpoint}`).then((resp) => {
       return resp.data
     }, (resp) => {
@@ -13,7 +14,7 @@ export default class Server {
     })
   }
 
-  POST (endpoint) {
+  POST(endpoint) {
     return this.http.post(this.url + `${endpoint}`).then((resp) => {
       return resp.data
     }, (resp) => {
@@ -22,13 +23,16 @@ export default class Server {
     })
   }
 
-  getChats () { return this.GET('/chats') }
+  getChats() { return this.GET('/chats') }
 
-  getAttachments () { return this.GET('/attachments') }
+  getAttachments() { return this.GET('/attachments') }
 
-  getMessages (chatId) { return this.GET(`/messages/${chatId}`) }
+  getMessages(chatId) { return this.GET(`/messages/${chatId}`) }
+  getMessagesPaged(chatId, page) { return this.GET(`/messages/${chatId}/${(page - 1) * 20}`) }
 
-  postMessage (personId, msg) {
+  getMessageAttachment(msgId) { return this.GET(`/attachments/${msgId}`) }
+
+  postMessage(personId, msg) {
     return this.POST(`/message/${personId}/${msg}`)
   }
 
