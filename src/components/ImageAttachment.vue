@@ -177,7 +177,7 @@ export default {
 
 <style lang="scss" scoped>
 .face-rect {
-  border: 2px solid red;
+  border: 2px solid orange;
   position: relative;
 }
 </style>

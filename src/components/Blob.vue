@@ -33,13 +33,13 @@
         </v-icon>
           </v-badge>
           <v-badge :content="ECount" v-if="ECount>0" class="mx-5">
-                  <v-hover @input="hover=true">
-          <v-icon
-          color="grey lighten-1"
-          large
-        >
-          {{icons.mdiAccount}}
-        </v-icon>
+                  <v-hover v-model="hover">
+          <v-avatar
+      color="orange"
+      size="36"
+    >
+      <span class="white--text text-h5">E</span>
+    </v-avatar>
                   </v-hover>
           </v-badge>
           {{value.origWidth}} {{value.origHeight}}
@@ -107,7 +107,7 @@ export default {
   },
   data: () => ({
     iconColor: undefined,
-    hover: true,
+    hover: false,
     icons: {
       mdiMagnify,
       mdiSortNumericAscending,
