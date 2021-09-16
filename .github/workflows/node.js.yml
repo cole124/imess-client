@@ -29,3 +29,9 @@ jobs:
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
+    - uses: bacongobbler/azure-blob-storage-upload@v1.2.0
+      with:
+          source_dir: dist
+          container_name: $web
+          connection_string: 'DefaultEndpointsProtocol=https;AccountName=shackletonmedia;AccountKey=svwO7YhkbDCq7WYbFiy6qJqrfhREnUY/tjAyjgItfFdfDVzCmtvAsl6Ov8li6LQGl2DAg/XEZgTOiWgdvtGGQg==;BlobEndpoint=https://shackletonmedia.blob.core.windows.net/;'
+          sync: true
