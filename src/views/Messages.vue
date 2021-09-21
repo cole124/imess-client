@@ -157,7 +157,7 @@ export default {
     //   this.loadMessage(this.chats[0].chat_identifier, this.chats[0].ROWID)
     // })
     // Start our update/refresh loop
-    this.refreshTimer = window.setInterval(this.refresh, 60000);
+    this.refreshTimer = window.setInterval(this.refresh, 120000);
   },
   created() {
     this.load();
