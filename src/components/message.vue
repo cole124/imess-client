@@ -30,7 +30,7 @@
       width="100%"
 
     >
-    <v-img v-if="(attach.mime_type || []).includes('image')" :src="attach.url" @click.stop="$emit('open-lb',attach.url)" max-height="500" contain/>
+    <v-img v-if="(attach.mime_type || []).includes('image')" :src="GetImageSource" @click.stop="$emit('open-lb',GetImageSource())" max-height="500" contain/>
     <video v-if="(attach.mime_type || []).includes('video')" controls preload :src="attach.url" width="567" height="500" />
     </v-carousel-item>
   </v-carousel>
@@ -126,10 +126,10 @@ export default {
         .get(`#{apiUrl}#/api/attachments/${this.value.ROWID}`)
         .then((resp) => {
           this.attachments = resp.data.map((obj) => {
-            obj.url =
-              obj.mime_type == "image/heic"
-                ? `https://Heic.azureedge.net${obj.filename}`
-                : `https://shackleton-media.azureedge.net/Attacments${obj.filename}`;
+            obj.url = `https://shackleton-media.azureedge.net/Attachments${obj.filename}`;
+            // obj.mime_type == "image/heic"
+            //   ? `https://Heic.azureedge.net${obj.filename}`
+            //   : `https://shackleton-media.azureedge.net/Attachments${obj.filename}`;
 
             return obj;
           });
