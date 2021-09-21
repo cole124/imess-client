@@ -30,8 +30,31 @@
       width="100%"
 
     >
-    <v-img v-if="(attach.mime_type || []).includes('image')" :src="GetImageSource" @click.stop="$emit('open-lb',GetImageSource())" max-height="500" contain/>
-    <video v-if="(attach.mime_type || []).includes('video')" controls preload :src="attach.url" width="567" height="500" />
+    <v-card min-height="500">
+            <image-attachment
+        :value="attach" v-on:showLB="$emit('open-lb',$event)"
+        max-height="500" v-if="(attach.mime_type || []).includes('image')"
+      ></image-attachment>
+      <!-- <div v-else-if="(value.mime_type || []).includes('image') && (value.files || []).length > 0" :id="value.attachment_id" data-live-photo ref="livePlayer" style="width: 100%; height: auto; min-height:300px;"
+            :data-photo-src="ImageSource" data-proactively-loads-video
+            :data-video-src="`https://shackleton-media.azureedge.net/Attachments${value.files[0]}`"></div> -->
+        <video v-else-if="(attach.mime_type || []).includes('video')" controls preload :src="attach.url" />
+      <!-- <v-card-text v-html="FileList"></v-card-text> -->
+            <v-card-actions>
+              
+            <v-btn icon color="primary">
+        <v-icon>{{icons.mdiDownload}}</v-icon>
+      </v-btn>
+      <v-btn icon color="primary" @click="addIgnored(attach.filename)" :disabled="Stars.includes(attach.filename)">
+        <v-icon>{{icons.mdiCloseOutline}}</v-icon>
+      </v-btn>
+      <v-btn icon color="primary" @click="Stars.includes(attach.filename) ? $emit('rem-fav',attach) : $emit('set-fav',attach)">
+        <v-icon v-text="Stars.includes(attach.filename) ? icons.mdiStar : icons.mdiStarOutline"></v-icon>
+      </v-btn>
+      </v-card-actions>
+          </v-card>
+    <!-- <v-img v-if="(attach.mime_type || []).includes('image')" :src="GetImageSource(attach)" @click.stop="$emit('open-lb',GetImageSource(attach))" max-height="500" contain/>
+    <video v-if="(attach.mime_type || []).includes('video')" controls preload :src="attach.url" width="567" height="500" /> -->
     </v-carousel-item>
   </v-carousel>
   <v-card-text v-if="CleanText.length>0">{{CleanText}}</v-card-text>
@@ -69,8 +92,16 @@
 
 <script>
 /* eslint-disable */
-const { heicConvert } = require("heic-convert");
-import { mdiChevronLeft, mdiChevronRight } from "@mdi/js";
+import heicConvert from "heic-convert";
+import {
+  mdiDownload,
+  mdiChevronDown,
+  mdiChevronRight,
+  mdiChevronLeft,
+  mdiStar,
+} from "@mdi/js";
+import { mapMutations, mapGetters } from "vuex";
+import ImageAttachment from "@/components/ImageAttachment";
 export default {
   name: "message",
   props: {
@@ -88,13 +119,21 @@ export default {
       default: true,
     },
   },
+  components: { "image-attachment": ImageAttachment },
   data() {
     return {
       attachments: [],
-      icons: { mdiChevronLeft, mdiChevronRight },
+      icons: {
+        mdiDownload,
+        mdiChevronDown,
+        mdiChevronRight,
+        mdiChevronLeft,
+        mdiStar,
+      },
     };
   },
   computed: {
+    ...mapGetters("Attachments", ["Stars"]),
     HasAttachments() {
       if (!this.value) return false;
 

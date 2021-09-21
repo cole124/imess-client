@@ -126,7 +126,7 @@
               <v-list-item
                 v-for="(number, index) in numberOfPages"
                 :key="index"
-                @click="currentPage=number"
+                :to="`/Person/${personId}/Attachments/${number}`"
               >
                 <v-list-item-title>{{ number }}</v-list-item-title>
               </v-list-item>
@@ -318,7 +318,7 @@ export default {
             this.$_.chunk(this.FilteredAttachments, this.itemsPerPage)[
               this.currentPage
             ],
-            (i) => i.mime_type.includes("image")
+            (i) => i.mime_type.includes("image") && !i.data
           ).map((a) => {
             return fetch(a.url)
               .then((r) => r.blob())
@@ -344,10 +344,10 @@ export default {
         .then(async (resp) => {
           this.attachments = this.$_.filter(
             resp.data.map((obj) => {
-              obj.url =
-                obj.mime_type == "image/heic"
-                  ? `https://Heic.azureedge.net${obj.filename}`
-                  : `https://shackleton-media.azureedge.net/Attachments${obj.filename}`;
+              obj.url = `https://shackleton-media.azureedge.net/Attachments${obj.filename}`;
+              // obj.mime_type == "image/heic"
+              //   ? `https://Heic.azureedge.net${obj.filename}`
+              //   : `https://shackleton-media.azureedge.net/Attachments${obj.filename}`;
 
               obj.date = DateTime.fromSeconds(
                 obj.msgDate / 1000000000 + 978223302,
@@ -372,31 +372,31 @@ export default {
         },
       };
       var that = this;
-      this.$http
-        .get(
-          "https://centralus.api.cognitive.microsoft.com/face/v1.0/persongroups/neighbors/persons/76386f7f-05db-421d-9efa-5bb6fafaf9f7",
-          config
-        )
-        .then((res) => {
-          promise
-            .all(
-              res.data.persistedFaceIds.map((f) => {
-                return that.$http
-                  .get(
-                    `https://centralus.api.cognitive.microsoft.com/face/v1.0/persongroups/neighbors/persons/76386f7f-05db-421d-9efa-5bb6fafaf9f7/persistedFaces/${f}`,
-                    config
-                  )
-                  .then((result) => {
-                    debugger;
-                  })
-                  .catch((err) => console.log(err));
-              })
-            )
-            .then((r2) => {
-              debugger;
-            });
-        })
-        .catch((err) => console.log(err));
+      // this.$http
+      //   .get(
+      //     "https://centralus.api.cognitive.microsoft.com/face/v1.0/persongroups/neighbors/persons/76386f7f-05db-421d-9efa-5bb6fafaf9f7",
+      //     config
+      //   )
+      //   .then((res) => {
+      //     promise
+      //       .all(
+      //         res.data.persistedFaceIds.map((f) => {
+      //           return that.$http
+      //             .get(
+      //               `https://centralus.api.cognitive.microsoft.com/face/v1.0/persongroups/neighbors/persons/76386f7f-05db-421d-9efa-5bb6fafaf9f7/persistedFaces/${f}`,
+      //               config
+      //             )
+      //             .then((result) => {
+      //               debugger;
+      //             })
+      //             .catch((err) => console.log(err));
+      //         })
+      //       )
+      //       .then((r2) => {
+      //         debugger;
+      //       });
+      //   })
+      //   .catch((err) => console.log(err));
     },
 
     LoadMore($state) {

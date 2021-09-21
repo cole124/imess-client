@@ -9,7 +9,7 @@
         max-height="500" v-if="(value.mime_type || []).includes('image') && (value.files || []).length==0"
       ></image-attachment>
       <div v-else-if="(value.mime_type || []).includes('image') && (value.files || []).length > 0" :id="value.attachment_id" data-live-photo ref="livePlayer" style="width: 100%; height: auto; min-height:300px;"
-            :data-photo-src="value.url" data-proactively-loads-video
+            :data-photo-src="ImageSource" data-proactively-loads-video
             :data-video-src="`https://shackleton-media.azureedge.net/Attachments${value.files[0]}`"></div>
         <video v-else-if="(value.mime_type || []).includes('video')" controls preload :src="value.url" />
       <v-card-text v-html="FileList"></v-card-text>
@@ -32,6 +32,7 @@
 
 <script>
 const { BlobServiceClient } = require("@azure/storage-blob");
+import heicConvert from "heic-convert";
 const { DateTime } = require("luxon");
 import { mapMutations, mapGetters } from "vuex";
 import * as LivePhotosKit from "livephotoskit";
@@ -77,6 +78,7 @@ export default {
       mdiPageLast,
     },
     iconColor: undefined,
+    imageData: null,
   }),
   props: {
     value: {
@@ -99,15 +101,28 @@ export default {
         });
     },
     processBlob() {
-      axios.post(
-        `http://localhost:7071/api/msgAttachment/Attachments${this.value.filename}`,
-        {
-          attachment_id: this.value.attachment_id.toString(),
-          chat_id: this.value.chat_id.toString(),
-          message_id: this.value.message_id.toString(),
-          favorite: this.Stars.includes(this.value.filename) ? "true" : "false",
+      // axios.post(
+      //   `http://localhost:7071/api/msgAttachment/Attachments${this.value.filename}`,
+      //   {
+      //     attachment_id: this.value.attachment_id.toString(),
+      //     chat_id: this.value.chat_id.toString(),
+      //     message_id: this.value.message_id.toString(),
+      //     favorite: this.Stars.includes(this.value.filename) ? "true" : "false",
+      //   }
+      // );
+    },
+    async GetHeic() {
+      let output = await fetch(this.value.data || this.value.url).then(
+        async (data) => {
+          const buffer = Buffer.from(await data.arrayBuffer());
+
+          return heicConvert({ buffer, format: "PNG" });
         }
       );
+
+      this.imageData = `data:image/png;base64,${btoa(
+        output.reduce((data, byte) => `${data}${String.fromCharCode(byte)}`, "")
+      )}`;
     },
   },
   filters: {
@@ -126,6 +141,10 @@ export default {
 
       return str;
     },
+    ImageSource() {
+      // return this.value.data || this.value.url;
+      return this.imageData || this.value.data || this.value.url;
+    },
   },
   mounted() {
     //const myNewPlayer = LivePhotosKit.Player();
@@ -137,6 +156,7 @@ export default {
       (this.value.mime_type || []).includes("image") &&
       this.value.files.length > 0
     ) {
+      if (this.value.mime_type == "image/heic") this.GetHeic();
       this.$nextTick(() => this.AddLivePlayer());
     }
   },

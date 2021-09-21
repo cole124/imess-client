@@ -56,7 +56,7 @@ export default {
   },
   computed: {
     ImageSource() {
-      return this.value.data || this.value.url;
+      // return this.value.data || this.value.url;
       return this.imageData || this.value.data || this.value.url;
     },
     hFactor() {
@@ -90,7 +90,7 @@ export default {
       return padding;
     },
     rects() {
-      if (!this.loaded) return [];
+      if (!this.loaded || !this.value.FaceRectangles) return [];
       return this.value.FaceRectangles.map((r) => {
         return {
           show: this.showRecs,
@@ -170,7 +170,7 @@ export default {
     },
   },
   created() {
-    // if (this.value.mime_type == "image/heic") this.GetHeic();
+    if (this.value.mime_type == "image/heic") this.GetHeic();
   },
 };
 </script>

@@ -184,9 +184,9 @@ export default {
             );
             if (idx) {
               this.currentPage = Math.floor(idx / this.itemsPerPage) + 1;
-              //   if (idx > this.itemsPerPage) {
-              //     this.startIdx = idx - this.itemsPerPage;
-              //   }
+              if (idx > this.itemsPerPage) {
+                this.startIdx = idx - this.itemsPerPage;
+              }
             }
           }
           //}
