@@ -21,6 +21,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - uses: azure/login@v1
+      with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v2
       with:
@@ -35,3 +38,16 @@ jobs:
           container_name: $web
           connection_string: ${{ secrets.shackletonmedia }}
           sync: true
+    - name: Purge CDN endpoint
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.0.72
+        inlineScript: |
+           az cdn endpoint purge --content-paths  "/*" --profile-name "Shackleton" --name "shackleton" --resource-group "MediaConversion"
+           
+  # Azure logout 
+    - name: logout
+      run: |
+            az logout
+      if: always()
+
