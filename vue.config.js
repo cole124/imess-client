@@ -42,7 +42,7 @@ module.exports = {
                             pattern: /(#{apiUrl})#/gi,
                             replacement: function (match, p1, offset, string) {
                                 //return 'https://localhost:5001';
-                                return "//shackleton-sms.azureedge.net";
+                                return "https://sms-api.shackletons.net:44056";
                             },
                         },
                         {
