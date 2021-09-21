@@ -570,7 +570,7 @@ export default {
     }
 
     this.setFavs(tmp);
-    this.refreshTimer = window.setInterval(this.refresh, 60000);
+    this.refreshTimer = window.setInterval(this.refresh, 360000);
   },
 };
 </script>
