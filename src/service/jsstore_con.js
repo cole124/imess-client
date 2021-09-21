@@ -11,7 +11,7 @@ const getWorkerPath = () => {
     }
     else { // return prod build when env is production
 
-        return require("file-loader?name=scripts/[name].[hash].js!jsstore/dist/jsstore.worker.min.js");
+        return require("file-loader?name=assets/js/[name].[hash].js!jsstore/dist/jsstore.worker.min.js");
 
     }
 };
