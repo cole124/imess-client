@@ -9,6 +9,7 @@ import axios from "axios";
 import router from "./router";
 import store from "./store";
 import VueClipboard from 'vue-clipboard2'
+import './registerServiceWorker'
 
 Vue.use(VueClipboard)
 

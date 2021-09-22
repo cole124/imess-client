@@ -1,15 +1,15 @@
 {
   "name": "imess-client",
   "version": "0.0.1",
+  "private": true,
   "description": "iMess Client",
   "author": "Alex L <alex.redcode@gmail.com>",
-  "private": true,
   "scripts": {
     "serve": "vue-cli-service serve --host minint-2764cc0.shackletons.net",
-    "dev": "node build/dev-server.js",
     "build": "vue-cli-service build",
-    "test": "",
-    "lint": "eslint --ext .js,.vue src"
+    "lint": "eslint --ext .js,.vue src",
+    "dev": "node build/dev-server.js",
+    "test": ""
   },
   "dependencies": {
     "@azure/identity": "^1.5.2",
@@ -20,6 +20,7 @@
     "livephotoskit": "^1.5.6",
     "luxon": "^2.0.2",
     "material-design-lite": "^1.2.1",
+    "register-service-worker": "^1.7.1",
     "underscore": "^1.13.1",
     "vue": "^2.6.12",
     "vue-axios": "^3.2.5",
@@ -36,6 +37,7 @@
     "@mdi/font": "^5.9.55",
     "@mdi/js": "^5.9.55",
     "@vue/cli-plugin-babel": "^4.5.11",
+    "@vue/cli-plugin-pwa": "~4.5.0",
     "@vue/cli-plugin-router": "^4.5.11",
     "@vue/cli-plugin-vuex": "^4.5.11",
     "@vue/cli-service": "^4.5.11",
