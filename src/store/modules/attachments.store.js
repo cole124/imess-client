@@ -8,7 +8,8 @@ const state = {
     pageSize: 5,
     a_page: 1,
     saved: [],
-    persistedFaces: []
+    persistedFaces: [],
+    attachmentLoading: 'Not Started'
 
 }
 
@@ -21,6 +22,7 @@ const initialThread = () => ({
 })
 
 const getters = {
+    loadingStatus: state => state.attachmentLoading,
     curPage: state => {
         return state.currentThreadID
             ? state.threads[state.currentThreadID].a_page
@@ -135,6 +137,9 @@ const mutations = {
         if (!state.persistedFaces) state.persistedFaces = [];
 
         if (!_.contains(state.persistedFaces, payload)) state.persistedFaces.push(payload)
+    },
+    attachmentLoadingStatus(state, payload) {
+        state.attachmentLoading = payload
     }
 
 }
@@ -168,6 +173,17 @@ const actions = {
             }
         })
             .catch(err => console.error(err))
+    },
+    async getAttachments({ commit }) {
+        commit('chatsLoadingStatus', 'Loading')
+        var service = new ChatService()
+
+        return axios({ url: '#{apiUrl}#/api/chats', method: 'GET' })
+            .then(resp => {
+                commit('setChats', resp.data)
+                commit('attachmentLoadingStatus', 'Done')
+            }).catch(err => commit('attachmentLoadingStatus', err))
+            .finally()
     }
 }
 

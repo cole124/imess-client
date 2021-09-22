@@ -30,6 +30,14 @@ const getDatabase = () => {
             name: 'Attachments',
             columns: {
                 attachment_id: { primaryKey: true, dataType: JsStore.DATA_TYPE.Number },
+                filename: { dataType: JsStore.DATA_TYPE.String },
+                mime_type: { dataType: JsStore.DATA_TYPE.String },
+                transfer_name: { dataType: JsStore.DATA_TYPE.String },
+                total_bytes: { dataType: JsStore.DATA_TYPE.Number },
+                is_sticker: { dataType: JsStore.DATA_TYPE.Number },
+                msgDate: { dataType: JsStore.DATA_TYPE.Number },
+                message_id: { dataType: JsStore.DATA_TYPE.Number },
+                chat_id: { dataType: JsStore.DATA_TYPE.Number }
             },
             version: DBVersion
         },

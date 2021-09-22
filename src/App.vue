@@ -220,19 +220,19 @@ export default {
     },
   },
   created() {},
-  // async beforeCreate() {
-  //   try {
-  //     const isDbCreated = await initJsStore();
-  //     if (isDbCreated) {
-  //       console.log("db created");
-  //       // prefill database
-  //     } else {
-  //       console.log("db opened");
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // },
+  async beforeCreate() {
+    try {
+      const isDbCreated = await initJsStore();
+      if (isDbCreated) {
+        console.log("db created");
+        // prefill database
+      } else {
+        console.log("db opened");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  },
 };
 </script>
 

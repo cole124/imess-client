@@ -3,7 +3,7 @@
         
     
       <v-data-iterator
-        :items="VisibleAttachments"
+        :items="FilteredAttachments"
         item-key="attachment_id"
         hide-default-footer
         :loading="prefetching || busy"
@@ -55,7 +55,7 @@
               solo-inverted
               @input="setAllowedMimes"
               hide-details
-              :items="MediaTypes"
+              :items="['image/jpeg','image/gif','image/png','image/heic','image/bmp','image/heic-sequence','video/quicktime','text/vcard','video/3gpp','application/pdf','video/mp4','audio/x-m4a','text/x-vlocation','audio/amr']"
               label="filter"
               multiple
             ></v-select>
@@ -232,13 +232,16 @@ export default {
   data: () => ({
     refreshTimer: null,
     attachments: [],
+    FilteredAttachments: [],
     currentPage: 1,
     lightbox: false,
     lb_url: null,
     prefetching: false,
     searchTxt: "",
     busy: true,
+    MediaTypes: [],
     sortDesc: true,
+    totalCount: 0,
     blobService: null,
     cache: null,
     icons: {
@@ -265,7 +268,7 @@ export default {
   watch: {
     currentPage(v) {
       this.scrollTop();
-      this.PreloadMedia();
+      this.LoadAttachmentsFromDB();
     },
     pg(v) {
       if (typeof v === "string") {
@@ -279,11 +282,15 @@ export default {
       if (this.currentPage > this.numberOfPages) {
         this.currentPage = this.numberOfPages;
       }
+      this.LoadAttachmentsFromDB();
     },
     numberOfPages(v) {
       if (this.currentPage > this.numberOfPages) {
         this.currentPage = this.numberOfPages;
       }
+    },
+    allowed_mimes() {
+      this.LoadAttachmentsFromDB();
     },
   },
   props: {
@@ -336,35 +343,83 @@ export default {
     scrollTop() {
       this.$nextTick(() => this.$vuetify.goTo(0));
     },
+    LoadAttachmentsFromDB() {
+      this.busy = true;
+      this.FilteredAttachments = [];
+      var service = new ChatService();
+      var q = {
+        mime_type: {
+          in: this.allowed_mimes,
+        },
+      };
+
+      // if (this.ignoredFilter == "Exclude Ignored") {
+      //   q.filname = {
+      //     in: this.Ignored,
+      //   };
+      // }
+
+      service
+        .getAttachmentsByPage(this.currentPage, this.itemsPerPage, q)
+        .then((r) => {
+          this.FilteredAttachments = r.map((obj) => {
+            obj.url = `https://shackleton-media.azureedge.net/Attachments${obj.filename}`;
+            // obj.mime_type == "image/heic"
+            //   ? `https://Heic.azureedge.net${obj.filename}`
+            //   : `https://shackleton-media.azureedge.net/Attachments${obj.filename}`;
+
+            obj.date = DateTime.fromSeconds(
+              obj.msgDate / 1000000000 + 978223302,
+              {
+                zone: "UTC",
+              }
+            );
+            return obj;
+          });
+        })
+        .catch((err) => console.error(err))
+        .finally(() => {
+          this.busy = false;
+        });
+
+      service.getAttachmentsCount(q).then((r) => (this.totalCount = r));
+    },
     LoadAttachments() {
       this.$http
         .get(
           `#{apiUrl}#/api/personAttachments/${this.personId.replace("h", "")}`
         )
         .then(async (resp) => {
-          this.attachments = this.$_.filter(
-            resp.data.map((obj) => {
-              obj.url = `https://shackleton-media.azureedge.net/Attachments${obj.filename}`;
-              // obj.mime_type == "image/heic"
-              //   ? `https://Heic.azureedge.net${obj.filename}`
-              //   : `https://shackleton-media.azureedge.net/Attachments${obj.filename}`;
+          var service = new ChatService();
+          service
+            .addAttachments(resp.data)
+            .then(() => console.log("Attachments added to database"))
+            .catch((err) => console.error(err))
+            .finally(() => this.LoadAttachmentsFromDB());
 
-              obj.date = DateTime.fromSeconds(
-                obj.msgDate / 1000000000 + 978223302,
-                {
-                  zone: "UTC",
-                }
-              );
-              return obj;
-            }),
-            (a) =>
-              !this.$_.contains(["application/pdf", "image/gif"], a.mime_type)
-          );
+          // this.attachments = this.$_.filter(
+          //   resp.data.map((obj) => {
+          //     obj.url = `https://shackleton-media.azureedge.net/Attachments${obj.filename}`;
+          //     // obj.mime_type == "image/heic"
+          //     //   ? `https://Heic.azureedge.net${obj.filename}`
+          //     //   : `https://shackleton-media.azureedge.net/Attachments${obj.filename}`;
+
+          //     obj.date = DateTime.fromSeconds(
+          //       obj.msgDate / 1000000000 + 978223302,
+          //       {
+          //         zone: "UTC",
+          //       }
+          //     );
+          //     return obj;
+          //   }),
+          //   (a) =>
+          //     !this.$_.contains(["application/pdf", "image/gif"], a.mime_type)
+          // );
         })
         .finally(() => {
-          this.busy = false;
+          this.LoadAttachmentsFromDB();
           //this.setAllowedMimes(this.MediaTypes);
-          this.PreloadMedia();
+          //this.PreloadMedia();
         });
       let config = {
         headers: {
@@ -483,13 +538,13 @@ export default {
       "Stars",
       "Ignored",
     ]),
-    MediaTypes() {
+    MediaTypes2() {
       return this.$_.pluck(
         this.$_.uniq(this.attachments, (a) => a.mime_type),
         "mime_type"
       );
     },
-    FilteredAttachments() {
+    FilteredAttachments2() {
       var temp = this.$_.sortBy(
         this.$_.filter(this.attachments, (a) => {
           return (
@@ -538,10 +593,8 @@ export default {
       }
     },
     numberOfPages() {
-      if ((this.FilteredAttachments || []).length == 0) return 0;
-      return (
-        Math.floor(this.FilteredAttachments.length / this.itemsPerPage) + 1 || 0
-      );
+      // if ((this.FilteredAttachments || []).length == 0) return 0;
+      return Math.floor(this.totalCount / this.itemsPerPage) + 1 || 0;
     },
   },
   beforeRouteUpdate(to, from, next) {
