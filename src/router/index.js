@@ -12,6 +12,11 @@ const router = new Router({
             component: () => import(/* webpackPrefetch: true */'@/views/Test.vue'),
         },
         {
+            path: '/PView/:pg?',
+            props: true,
+            component: () => import(/* webpackPrefetch: true */'@/views/PViewer.vue'),
+        },
+        {
             path: '/',
             component: Messages,
             name: 'Messages',
