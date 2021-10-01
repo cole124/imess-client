@@ -7,11 +7,26 @@
             </v-card-title>
             <v-card-subtitle>{{tags.username}}</v-card-subtitle>
             
+        <div class="d-flex justify-center flex-column video-wrapper">
+          <video class="video-js vjs-big-play-centered vjs-fill vjs-controls-enabled"  
         
-        
-      <v-card-text>
+         ref="video"></video>
+        <!-- <video-player  class="video-player-box"
+                 ref="videoPlayer"
+                 :options="playerOptions"
+                 :playsinline="true"
+                 
+
+                 @play="onPlayerPlay($event)"
+                 @pause="onPlayerPause($event)"
+                 
+                 
+                 @ready="playerReadied">
+  </video-player> -->
+        </div>
+      <!-- <v-card-text>
         <video v-if="(value.mime_type || []).includes('video')" controls preload :src="url" max-height="500" width="100%"/>
-        </v-card-text>
+        </v-card-text> -->
             <v-card-actions>
               
 
@@ -87,8 +102,26 @@ const { BlobServiceClient } = require("@azure/storage-blob");
 const { QueueServiceClient } = require("@azure/storage-queue");
 const { DateTime } = require("luxon");
 import { mapMutations, mapGetters } from "vuex";
+import "video.js/dist/video-js.css";
+
+import _videojs from "video.js";
+const videojs = window.videojs || _videojs;
 import ImageAttachment from "@/components/ImageAttachment";
+import "videojs-thumbnail-sprite";
 import axios from "axios";
+// as of videojs 6.6.0
+const DEFAULT_EVENTS = [
+  "loadeddata",
+  "canplay",
+  "canplaythrough",
+  // "play",
+  "pause",
+  "waiting",
+  // "playing",
+  "ended",
+  "error",
+];
+
 import {
   mdiMagnify,
   mdiSortNumericAscending,
@@ -113,12 +146,10 @@ import {
 
 export default {
   name: "pBlob",
-  components: {
-    "image-attachment": ImageAttachment,
-  },
+
   data: () => ({
-    iconColor: undefined,
-    hover: false,
+    player: null,
+    reseted: true,
     tgs: [],
     editingName: false,
     editedName: "",
@@ -164,6 +195,52 @@ export default {
     allTags: {
       type: Array,
     },
+    start: {
+      type: Number,
+      default: 0,
+    },
+    crossOrigin: {
+      type: String,
+      default: "",
+    },
+    playsinline: {
+      type: Boolean,
+      default: true,
+    },
+    customEventName: {
+      type: String,
+      default: "statechanged",
+    },
+    events: {
+      type: Array,
+      default: () => [],
+    },
+    globalOptions: {
+      type: Object,
+      default: () => ({
+        autoplay: false,
+        controls: true,
+        preload: "auto",
+        fluid: true,
+        muted: false,
+        // controlBar: {
+        //   remainingTimeDisplay: true,
+        //   playToggle: {},
+        //   progressControl: {},
+        //   fullscreenToggle: {},
+        //   volumeMenuButton: {
+        //     inline: false,
+        //     vertical: true,
+        //   },
+        // },
+        techOrder: ["html5"],
+        plugins: {},
+      }),
+    },
+    globalEvents: {
+      type: Array,
+      default: () => [],
+    },
   },
   watch: {
     MediaTags(v) {
@@ -171,7 +248,30 @@ export default {
     },
   },
   methods: {
-    ...mapMutations("Attachments", ["addIgnored", "saveBlob", "addFace"]),
+    onPlayerPlay(player) {
+      this.$emit("playing", this.value.etag);
+    },
+    onPlayerPause(player) {
+      console.log("player pause!", player);
+    },
+    // ...player event
+
+    // or listen state event
+    playerStateChanged(playerCurrentState) {
+      console.log("player current update state", playerCurrentState);
+    },
+
+    // player is ready
+    playerReadied(player) {
+      console.log("the player is readied", player);
+      // you can use it to do something...
+      // player.[methods]
+    },
+    pausePlayer() {
+      if (this.player.hasStarted_) {
+        this.player.pause();
+      }
+    },
     editName() {
       this.editedName = this.DisplayName;
       this.editingName = true;
@@ -218,6 +318,107 @@ export default {
 
       this.editingName = false;
     },
+    initialize() {
+      // videojs options
+      const videoOptions = Object.assign(
+        {},
+        this.globalOptions,
+        this.playerOptions
+      );
+
+      // ios fullscreen
+      // if (this.playsinline) {
+      //   this.$refs.video.setAttribute("playsinline", this.playsinline);
+      //   this.$refs.video.setAttribute("webkit-playsinline", this.playsinline);
+      //   this.$refs.video.setAttribute("x5-playsinline", this.playsinline);
+      //   this.$refs.video.setAttribute("x5-video-player-type", "h5");
+      //   this.$refs.video.setAttribute("x5-video-player-fullscreen", false);
+      // }
+
+      // cross origin
+      if (this.crossOrigin !== "") {
+        this.$refs.video.crossOrigin = this.crossOrigin;
+        this.$refs.video.setAttribute("crossOrigin", this.crossOrigin);
+      }
+
+      // emit event
+      const emitPlayerState = (event, value) => {
+        if (event) {
+          this.$emit(event, this.player);
+        }
+        if (value) {
+          this.$emit(this.customEventName, { [event]: value });
+        }
+      };
+
+      // avoid error "VIDEOJS: ERROR: Unable to find plugin: __ob__"
+      if (videoOptions.plugins) {
+        delete videoOptions.plugins.__ob__;
+      }
+
+      // videoOptions
+      // console.log('videoOptions', videoOptions)
+
+      // player
+      const self = this;
+      this.player = videojs(this.$refs.video, videoOptions, function () {
+        // events
+        const events = DEFAULT_EVENTS.concat(self.events).concat(
+          self.globalEvents
+        );
+
+        // watch events
+        const onEdEvents = {};
+        for (let i = 0; i < events.length; i++) {
+          if (
+            typeof events[i] === "string" &&
+            onEdEvents[events[i]] === undefined
+          ) {
+            ((event) => {
+              onEdEvents[event] = null;
+              this.on(event, () => {
+                emitPlayerState(event, true);
+              });
+            })(events[i]);
+          }
+        }
+        this.on("play", function () {
+          self.$emit("playing", self.value.etag);
+        });
+        // watch timeupdate
+        this.on("timeupdate", function () {
+          emitPlayerState("timeupdate", this.currentTime());
+        });
+
+        // player readied
+        self.$emit("ready", this);
+      });
+    },
+    dispose(callback) {
+      if (this.player && this.player.dispose) {
+        if (this.player.techName_ !== "Flash") {
+          this.player.pause && this.player.pause();
+        }
+        this.player.dispose();
+        this.player = null;
+        this.$nextTick(() => {
+          this.reseted = false;
+          this.$nextTick(() => {
+            this.reseted = true;
+            this.$nextTick(() => {
+              callback && callback();
+            });
+          });
+        });
+        /*
+          if (!this.$el.children.length) {
+            const video = document.createElement('video')
+            video.className = 'video-js'
+            this.$el.appendChild(video)
+          }
+          */
+      }
+    },
   },
   filters: {
     DisplayDate: function (value) {
@@ -226,7 +427,24 @@ export default {
     },
   },
   computed: {
-    ...mapGetters("Attachments", ["FaceFiles", "Stars"]),
+    playerOptions() {
+      return {
+        // videojs options
+        muted: true,
+        language: "en",
+        playbackRates: [0.7, 1.0, 1.5, 2.0],
+
+        sources: [
+          {
+            type: this.value.mime_type,
+            src: this.url,
+          },
+        ],
+
+        //height: "450",
+        //poster: "/static/images/author.jpg",
+      };
+    },
     DisplayName() {
       return this.$_.has(this.tags, "display_name")
         ? this.tags.display_name
@@ -253,6 +471,26 @@ export default {
   },
   mounted() {
     this.tgs = this.MediaTags;
+    if (!this.player) {
+      this.initialize();
+    }
+  },
+  beforeDestroy() {
+    if (this.player) {
+      this.dispose();
+    }
   },
 };
 </script>
+
+<style lang="scss" scoped>
+.video-wrapper {
+  align-content: center;
+  align-items: center;
+  justify-content: center;
+  //max-height: calc(100vh - 350px);
+  max-width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+</style>

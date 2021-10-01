@@ -68,10 +68,10 @@
         <template v-slot:default="{items}">
           
           <v-row id="scroll-content">
-          <v-col class="d-flex child-flex" v-for="(a,i) in items" :key="a.etag"
-      cols="12" md="6" 
+          <v-col class="d-flex child-flex px-12 video-wrapper" v-for="(a,i) in items" :key="a.etag"
+      cols="12"
     ><blob :value="a" :all-tags="Tags" v-bind="a" @input="UpdateAttachment"
-    v-on:delete="DeleteBlob" :hash-count="hashs[a.md5]"></blob>
+    v-on:delete="DeleteBlob" :hash-count="hashs[a.md5]" v-on:playing="VideoPlaying" :ref="a.etag"></blob>
       </v-col>
           </v-row>
             </template>
@@ -188,9 +188,7 @@
             
     </v-row>
     <!-- <infinite-loading @infinite="LoadMore"></infinite-loading> -->
-    <v-dialog v-model="lightbox" max-width="90%" height="90%">
-        <v-img :src="lb_url" contain width="100%" height="100%"></v-img>
-      </v-dialog>
+    
     </v-container>
 </template>
 
@@ -386,6 +384,16 @@ export default {
       var elem = document.getElementById("scroll-content");
       if (elem && elem.scrollTop) elem.scrollTop = 0;
     },
+    VideoPlaying(id) {
+      this.$_.each(
+        this.$_.filter(this.VisibleAttachments, (v) => v.etag != id),
+        (r) => {
+          var player = this.$refs[r.etag][0];
+          //debugger;
+          player.pausePlayer();
+        }
+      );
+    },
     async LoadAttachments() {
       this.busy = true;
       var container = "media";
@@ -432,6 +440,8 @@ export default {
         this.$_.filter(
           tmp.map((obj) => {
             obj.url = "https://shackleton-media.azureedge.net/" + obj.name;
+            // obj.url =
+            //   "https://shackletonmedia.blob.core.windows.net/media/" + obj.name;
             // obj.origWidth = parseInt(this.$_.get(obj.metadata, "origwidth", 0));
             // obj.origHeight = parseInt(
             //   this.$_.get(obj.metadata, "origheight", 0)
@@ -654,7 +664,7 @@ export default {
     Users() {
       return this.$_.uniq(
         this.$_.pluck(this.$_.pluck(this.attachments, "tags"), "username")
-      );
+      ).sort();
     },
     Tags() {
       return this.$_.filter(
@@ -769,7 +779,7 @@ export default {
       `https://shackletonmedia.blob.core.windows.net?sv=2020-04-08&ss=btqf&srt=sco&st=2021-09-08T17%3A42%3A09Z&se=2046-09-09T17%3A42%3A00Z&sp=rwdxftlacup&sig=Q3RCnYUF0zJQAhDM4sOchARYPb%2BoZdMt3hUCqN%2BkEMU%3D`
     );
     await this.LoadAttachments();
-    this.refreshTimer = window.setInterval(this.refresh, 60000);
+    this.refreshTimer = window.setInterval(this.refresh, 250000);
     //this.LoadAttachments();
     //var tmp = [];
 
@@ -784,10 +794,6 @@ export default {
 <style lang="scss" scoped>
 .v-main__wrap > div {
   -webkit-user-drag: none;
-}
-video {
-  object-fit: contain;
-  max-height: "500";
 }
 
 #scroll-content {
