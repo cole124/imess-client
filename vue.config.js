@@ -1,11 +1,9 @@
 /* eslint-disable */
 const StringReplacePlugin = require("string-replace-webpack-plugin");
 const VuetifyLoaderPlugin = require("vuetify-loader/lib/plugin");
-import getProjectVersion from 'get-project-version';
-
-const version = getProjectVersion({
-    template: '{{version}}-{{commit}}'
-});
+const fs = require('fs')
+const packageJson = fs.readFileSync('./package.json')
+const version = JSON.parse(packageJson).version || 0
 
 const webpack = require("webpack");
 
