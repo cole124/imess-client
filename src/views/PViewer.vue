@@ -12,17 +12,17 @@
         ref="toolbar"
       class="mb-1"
     >
-    <!-- <v-select
+    <v-select
               flat
               solo-inverted
               v-model="sortBy"
               hide-details
-              :items="['size','md5','etag','name','date']"
-              label="Container"
+              :items="['size','md5','etag','name','date','duration']"
+              label="Sort"
             ></v-select>
-            <v-btn icon @click="CheckFaces" color="blue"><v-icon>{{icons.mdiRefreshCircle}}</v-icon></v-btn> -->
-      <!--<v-spacer></v-spacer>
-      <v-spacer>
+            
+      <v-spacer></v-spacer>
+      <!--<v-spacer>
          <v-checkbox v-model="multiples" label="Multiples" hide-details></v-checkbox>
         <v-checkbox v-model="withFaces" label="Faces" hide-details></v-checkbox>
         <v-checkbox v-model="withE" label="E" hide-details></v-checkbox> 
@@ -35,12 +35,14 @@
               hide-details
               :items="Users"
               label="User"
+              clearable
             ></v-select>
             <v-spacer></v-spacer>
             <v-select
               flat
               solo-inverted
               multiple
+              clearable
               v-model="selectedTags"
               hide-details
               :items="Tags"
@@ -52,6 +54,7 @@
               solo-inverted
               multiple
               v-model="excludedTags"
+              clearable
               hide-details
               :items="Tags"
               label="Excluded Tags"
@@ -250,7 +253,7 @@ export default {
     persistedFaceIds: [],
     busy: false,
     sortDesc: true,
-    sortBy: "name",
+    sortBy: "duration",
     blobService: null,
     cache: [],
     selectedUsers: [],
@@ -728,12 +731,21 @@ export default {
         );
       }
 
-      temp = this.$_.sortBy(temp, (a) => {
-        return this.$_.has(a.tags, "display_name")
-          ? a.tags.display_name
-          : a.name.substr(a.name.lastIndexOf("/") + 1);
-      });
-
+      if (this.sortBy == "name") {
+        temp = this.$_.sortBy(temp, (a) => {
+          return this.$_.has(a.tags, "display_name")
+            ? a.tags.display_name
+            : a.name.substr(a.name.lastIndexOf("/") + 1);
+        });
+      } else if (this.sortBy == "duration") {
+        temp = this.$_.sortBy(temp, (a) => {
+          return this.$_.has(a.tags, "duration")
+            ? parseInt(a.tags.duration)
+            : 0;
+        });
+      } else {
+        temp = this.$_.sortBy(temp, this.sortBy);
+      }
       if (this.sortDesc) {
         temp.reverse();
       }

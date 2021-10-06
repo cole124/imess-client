@@ -1,9 +1,13 @@
 <template>
     <v-card min-height="500" :color="value.md5.length>0 && hashCount>1 ? 'yellow' : 'white'">
         <v-card-title class="text-h6">
-              <span v-text="DisplayName" @click="editName" v-if="!editingName"></span>
+          <div style="width:100%;">
+              <span v-text="DisplayName" @click="editName" v-if="!editingName" class="float-left"></span>
+              
               <v-text-field v-model="editedName" v-else :append-outer-icon="icons.mdiContentSaveOutline" outlined
               @change="SaveDisplayName" @click:append-outer="SaveDisplayName"></v-text-field>
+              <span v-if="Duration>0 && !editingName" class="float-right">{{Duration | TimeDisplay}}</span>
+              </div>
             </v-card-title>
             <v-card-subtitle>{{tags.username}}</v-card-subtitle>
             
@@ -421,12 +425,33 @@ export default {
     },
   },
   filters: {
-    DisplayDate: function (value) {
+    TimeDisplay: function (value) {
       if (!value) return "";
-      return value.toLocal().toLocaleString(DateTime.DATETIME_SHORT);
+      if (value < 60) {
+        return `${value}s`;
+      } else if (value < 3600) {
+        var min = Math.floor(value / 60);
+        var sec = value - min * 60;
+        return `${min}:${sec}`;
+      } else {
+        var h = Math.floor(value / 3600);
+        var min = Math.floor((value - h * 3600) / 60);
+        var sec = value - h * 3600 - min * 60;
+        return `${h}:${("000" + min).slice(-2)}:${sec}`;
+      }
     },
   },
   computed: {
+    Duration: {
+      get() {
+        return Math.ceil(
+          this.$_.has(this.tags, "duration") ? this.tags.duration : 0
+        );
+      },
+      set(v) {
+        debugger;
+      },
+    },
     playerOptions() {
       return {
         // videojs options
