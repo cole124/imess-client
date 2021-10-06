@@ -1,6 +1,11 @@
 /* eslint-disable */
 const StringReplacePlugin = require("string-replace-webpack-plugin");
 const VuetifyLoaderPlugin = require("vuetify-loader/lib/plugin");
+import getProjectVersion from 'get-project-version';
+
+const version = getProjectVersion({
+    template: '{{version}}-{{commit}}'
+});
 
 const webpack = require("webpack");
 
@@ -116,6 +121,20 @@ module.exports = {
             preProcessor: "scss",
             patterns: [],
         },
+    },
+    pwa: {
+        name: `ShackNet`,
+        workboxPluginMode: "InjectManifest",
+        workboxOptions: {
+            swSrc: "./src/sw.js",
+            swDest: "service-worker.js",
+        },
+        display: "standalone",
+        appleMobileWebAppCapable: "yes",
+        assetsVersion: version,
+        background_color: "#458CCB",
+        themeColor: "#458CCB",
+        msTileColor: "#458CCB",
     },
     css: {
         extract: false,

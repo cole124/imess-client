@@ -115,7 +115,7 @@ import "videojs-thumbnail-sprite";
 import axios from "axios";
 // as of videojs 6.6.0
 const DEFAULT_EVENTS = [
-  "loadeddata",
+  //"loadeddata",
   "canplay",
   "canplaythrough",
   // "play",
@@ -290,6 +290,12 @@ export default {
 
       this.$emit("input", tmp);
     },
+    updateDuration(val) {
+      var tmp = this.$_.clone(this.value);
+      tmp.metadata.tags = this.tgs.join(",");
+      tmp.tags.duration = Math.ceil(val).toString();
+      this.$emit("input", tmp);
+    },
     tagInput(m) {
       console.log(m);
     },
@@ -389,6 +395,11 @@ export default {
         this.on("play", function () {
           self.$emit("playing", self.value.etag);
         });
+
+        this.on("loadeddata", function () {
+          if (self.Duration == 0) self.updateDuration(self.player.duration());
+        });
+
         // watch timeupdate
         this.on("timeupdate", function () {
           emitPlayerState("timeupdate", this.currentTime());
@@ -432,12 +443,12 @@ export default {
       } else if (value < 3600) {
         var min = Math.floor(value / 60);
         var sec = value - min * 60;
-        return `${min}:${sec}`;
+        return `${min}:${("000" + sec).slice(-2)}`;
       } else {
         var h = Math.floor(value / 3600);
         var min = Math.floor((value - h * 3600) / 60);
         var sec = value - h * 3600 - min * 60;
-        return `${h}:${("000" + min).slice(-2)}:${sec}`;
+        return `${h}:${("000" + min).slice(-2)}:${("000" + sec).slice(-2)}`;
       }
     },
   },

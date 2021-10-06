@@ -131,11 +131,12 @@
                 <v-icon>{{icons.mdiChevronDown}}</v-icon>
               </v-btn>
             </template>
-            <v-list>
+            <v-list max-height="50vh">
               <v-list-item
                 v-for="(number, index) in numberOfPages"
                 :key="index"
-                @click="currentPage=number"
+                :to="`/pView/${number}`"
+                
               >
                 <v-list-item-title>{{ number }}</v-list-item-title>
               </v-list-item>
@@ -396,6 +397,9 @@ export default {
           player.pausePlayer();
         }
       );
+    },
+    SetPage(v) {
+      debugger;
     },
     async LoadAttachments() {
       this.busy = true;

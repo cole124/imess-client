@@ -15,6 +15,7 @@
     "@azure/identity": "^1.5.2",
     "@azure/storage-blob": "^12.7.0",
     "@azure/storage-queue": "^12.7.0",
+    "get-project-version": "^1.0.3",
     "heic-convert": "^1.2.4",
     "jsstore": "^4.3.7",
     "livephotoskit": "^1.5.6",

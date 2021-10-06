@@ -34,6 +34,20 @@
     <v-main>
       <router-view></router-view>
     </v-main>
+    <v-snackbar
+      v-model="updateExists"
+      :timeout="timeout"
+      left
+      bottom
+      :class="snackbarClass"
+    >
+      New version available!
+      <v-spacer />
+      <v-btn dark color="primary" @click.native="refreshApp">Refresh</v-btn>
+      <v-btn icon @click="updateExists = false">
+        <v-icon color="white">{{ icons.mdiClose }}</v-icon>
+      </v-btn>
+    </v-snackbar>
   </v-app>
 </template>
 
@@ -45,6 +59,7 @@ import Player from "./components/Player";
 const { DateTime } = require("luxon");
 import { initJsStore } from "./service/idb_service";
 import { mapMutations, mapGetters, mapActions } from "vuex";
+import { mdiClose } from "@mdi/js";
 
 class MSG {
   constructor(text) {
@@ -70,6 +85,9 @@ export default {
       server_address: "http://192.168.1.196:44055",
       lightbox: false,
       lb_url: null,
+      icons: {
+        mdiClose,
+      },
       drawer: null,
       attachments: {},
       worker: null,
@@ -83,6 +101,9 @@ export default {
       audiocontext: new (window.AudioContext || webkitAudioContext)(),
       currentPage: 1,
       itemsPerPage: 20,
+      registration: null,
+      updateExists: true,
+      timeout: -1,
     };
   },
   watch: {
@@ -107,6 +128,25 @@ export default {
       if (typeof this.SelectedChat == "undefined") return 0;
 
       return Math.ceil(this.SelectedChat.msgCount / 20);
+    },
+    snackbarClass() {
+      var cls = "snack";
+
+      var userAgent = navigator.userAgent.toLowerCase();
+      if (userAgent.indexOf("safari") != -1) {
+        if (userAgent.indexOf("chrome") > -1) {
+          cls += " chrome";
+        } else if (
+          userAgent.indexOf("opera") > -1 ||
+          userAgent.indexOf("opr") > -1
+        ) {
+          cls += " opera";
+        } else {
+          cls += " safari";
+        }
+      }
+
+      return cls;
     },
     SelectedChat() {
       return (
@@ -166,6 +206,13 @@ export default {
       //   this.loadMessage(this.conversations_current_chatId);
       // }
     },
+    refreshApp() {
+      this.updateExists = false;
+      if (!this.registration || !this.registration.waiting) {
+        return;
+      }
+      this.registration.waiting.postMessage("skipWaiting");
+    },
     loadMessage(chatId) {
       this.messagesLoading = true;
       this.conversations_current_chatId = chatId;
@@ -210,7 +257,10 @@ export default {
       //   });
       // }, 500);
     },
-
+    showRefreshUI(e) {
+      this.registration = e.detail;
+      this.updateExists = true;
+    },
     log(msg) {
       console.log(msg);
     },
@@ -219,7 +269,16 @@ export default {
       this.load();
     },
   },
-  created() {},
+  created() {
+    document.addEventListener("swUpdated", this.showRefreshUI, { once: true });
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (this.refreshing) return;
+        this.refreshing = true;
+        window.location.reload();
+      });
+    }
+  },
   async beforeCreate() {
     try {
       const isDbCreated = await initJsStore();
@@ -233,11 +292,19 @@ export default {
       console.error(error);
     }
   },
+  destroyed() {
+    document.removeEventListener("swUpdated", this.showRefreshUI);
+  },
 };
 </script>
 
 
 <style lang="scss">
+.snack.safari {
+  .v-snack__wrapper {
+    bottom: 100px;
+  }
+}
 .home-container {
   display: flex;
   height: 100%;
