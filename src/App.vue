@@ -102,7 +102,7 @@ export default {
       currentPage: 1,
       itemsPerPage: 20,
       registration: null,
-      updateExists: true,
+      updateExists: false,
       timeout: -1,
     };
   },
