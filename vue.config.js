@@ -4,7 +4,7 @@ const VuetifyLoaderPlugin = require("vuetify-loader/lib/plugin");
 const fs = require('fs')
 const packageJson = fs.readFileSync('./package.json')
 const version = JSON.parse(packageJson).version || 0
-
+const path = require("path");
 const webpack = require("webpack");
 
 module.exports = {

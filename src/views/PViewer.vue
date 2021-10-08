@@ -74,7 +74,7 @@
           <v-col class="d-flex child-flex px-12 video-wrapper" v-for="(a,i) in items" :key="a.etag"
       cols="12"
     ><blob :value="a" :all-tags="Tags" v-bind="a" @input="UpdateAttachment"
-    v-on:delete="DeleteBlob" :hash-count="hashs[a.md5]" v-on:playing="VideoPlaying" :ref="a.etag"></blob>
+    v-on:delete="DeleteBlob" :hash-count="hashs[a.md5]" v-on:playing="VideoPlaying" :ref="a.etag" :mute.sync="muted"></blob>
       </v-col>
           </v-row>
             </template>
@@ -331,6 +331,7 @@ export default {
   methods: {
     ...mapMutations("Attachments", [
       "setAttachPage",
+      "setMuted",
       "switchThread",
       "setAllowedMimes",
       "setPageSize",
@@ -789,6 +790,7 @@ export default {
   },
   created() {
     if (this.pg) this.currentPage = parseInt(this.pg);
+    this.setMuted(true);
   },
   async mounted() {
     this.blobService = new BlobServiceClient(
@@ -796,6 +798,7 @@ export default {
     );
     await this.LoadAttachments();
     this.refreshTimer = window.setInterval(this.refresh, 250000);
+
     //this.LoadAttachments();
     //var tmp = [];
 

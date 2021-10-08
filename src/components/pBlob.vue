@@ -250,8 +250,12 @@ export default {
     MediaTags(v) {
       this.tgs = v;
     },
+    isMuted(v) {
+      this.player.muted(v);
+    },
   },
   methods: {
+    ...mapMutations("Attachments", ["setMuted"]),
     onPlayerPlay(player) {
       this.$emit("playing", this.value.etag);
     },
@@ -400,6 +404,10 @@ export default {
           if (self.Duration == 0) self.updateDuration(self.player.duration());
         });
 
+        this.on("volumechange", function (value) {
+          self.setMuted(self.player.muted());
+        });
+
         // watch timeupdate
         this.on("timeupdate", function () {
           emitPlayerState("timeupdate", this.currentTime());
@@ -453,6 +461,7 @@ export default {
     },
   },
   computed: {
+    ...mapGetters("Attachments", ["isMuted"]),
     Duration: {
       get() {
         return Math.ceil(
@@ -466,7 +475,7 @@ export default {
     playerOptions() {
       return {
         // videojs options
-        muted: true,
+        muted: this.isMuted,
         language: "en",
         playbackRates: [0.7, 1.0, 1.5, 2.0],
 
@@ -485,12 +494,6 @@ export default {
       return this.$_.has(this.tags, "display_name")
         ? this.tags.display_name
         : this.value.name.substr(this.value.name.lastIndexOf("/") + 1);
-    },
-    IsPersisted() {
-      return this.$_.contains(this.FaceFiles, this.DisplayName);
-    },
-    FaceCount() {
-      return this.$_.get(this.tags, "faceCount", 0);
     },
     MediaTags() {
       return this.$_.filter(

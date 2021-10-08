@@ -9,8 +9,8 @@ const state = {
     a_page: 1,
     saved: [],
     persistedFaces: [],
-    attachmentLoading: 'Not Started'
-
+    attachmentLoading: 'Not Started',
+    muted: true
 }
 
 const initialThread = () => ({
@@ -22,6 +22,9 @@ const initialThread = () => ({
 })
 
 const getters = {
+    isMuted: state => {
+        return state.muted
+    },
     loadingStatus: state => state.attachmentLoading,
     curPage: state => {
         return state.currentThreadID
@@ -78,6 +81,9 @@ const getters = {
 }
 
 const mutations = {
+    setMuted(state, payload) {
+        state.muted = payload
+    },
     setAttachPage(state, pg) {
         if (state.currentThreadID) {
             state.threads[state.currentThreadID].a_page = pg
